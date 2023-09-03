@@ -13,7 +13,7 @@ export class UserController {
 
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
-    const user = await this.userService.createUser(createUserDto.username);
+    const user = await this.userService.createUser(createUserDto);
     return { message: 'User created successfully', user };
   }
 }

@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { InjectRepository } from '@nestjs/typeorm';
 import { map } from 'rxjs';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { CreateUserDto } from './create-user.dto';
+import { Model } from 'mongoose';
+import { User } from './user.interface';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly httpService: HttpService,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @Inject('USER_MODEL')
+    private userModel: Model<User>,
   ) {}
 
   getUserById(userId) {
@@ -23,14 +23,15 @@ export class UserService {
       .pipe(map((response) => response.data));
   }
 
-  async createUser(username: string): Promise<User> {
-    const user = this.usersRepository.create({ username });
-    await this.usersRepository.save(user);
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const createdUser = new this.userModel(createUserDto);
+    await createdUser.save();
 
-    this.sendEmail(user);
-    this.sendRabbitEvent(user);
+    // @todo
+    this.sendEmail(createdUser);
+    this.sendRabbitEvent(createdUser);
 
-    return user;
+    return createdUser;
   }
 
   private sendEmail(user: User) {
